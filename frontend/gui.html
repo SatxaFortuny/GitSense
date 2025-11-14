@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GitSense Chat</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* (Your CSS is perfect - no changes needed) */
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0f0f1a; 
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chat-window {
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding: 20px;
+            display: flex;
+            flex-direction: column; 
+            gap: 15px; 
+        }
+
+        .message {
+            padding: 12px 18px;
+            border-radius: 18px;
+            max-width: 70%;
+            line-height: 1.5;
+        }
+
+        .user-message {
+            background-color: #3b3b58; 
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px; 
+        }
+
+        .ai-message {
+            background-color: #2a2a3e; 
+            color: #dcdcdc;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px; 
+        }
+        
+        .ai-message.thinking {
+            color: #888;
+            font-style: italic;
+        }
+
+        #input-area {
+            display: flex;
+            padding: 20px;
+            border-top: 1px solid #2a2a3e;
+        }
+
+        #prompt-input {
+            flex-grow: 1;
+            border: none;
+            background-color: #2a2a3e;
+            color: white;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 16px;
+        }
+
+        #prompt-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #3b3b58;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="chat-window"></div>
+    <div id="input-area">
+        <input type="text" id="prompt-input" placeholder="Start texting..." autocomplete="off">
+    </div>
+
+    <script>
+        // Este JS no sabe nada de Python. Solo sabe cómo
+        // hacer una llamada de red a la URL de tu backend.
+        const chatWindow = document.getElementById('chat-window');
+        const promptInput = document.getElementById('prompt-input');
+
+        function showMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + sender;
+            messageDiv.innerText = text;
+            chatWindow.appendChild(messageDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            return messageDiv;
+        }
+
+        async function sendMessage() {
+            const prompt = promptInput.value.trim();
+            if (prompt === "") return; 
+
+            showMessage(prompt, 'user-message');
+            promptInput.value = ""; 
+
+            const thinkingIndicator = showMessage("Thinking...", 'ai-message thinking');
+
+            try {
+                // Llama a la URL donde el backend está escuchando
+                const encodedPrompt = encodeURIComponent(prompt);
+                const url = `http://127.0.0.1:8000/ask_question?question=${encodedPrompt}`;
+                
+                const response = await fetch(url); // <-- LA LLAMADA DE RED
+
+                if (!response.ok) { throw new Error(`Network error`); }
+                
+                const data = await response.json();
+                thinkingIndicator.innerText = data.answer;
+                thinkingIndicator.classList.remove('thinking');
+
+            } catch (error) {
+                console.error(error);
+                thinkingIndicator.innerText = "Error: Could not connect to the backend.";
+                thinkingIndicator.style.color = '#ff8888';
+            }
+        }
+
+        promptInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
