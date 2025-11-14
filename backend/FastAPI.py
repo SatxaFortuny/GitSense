@@ -2,7 +2,7 @@ __package__ = "backend"
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from CodeSense import ask
+from backend.GitSense import ask
 
 app = FastAPI()
 
@@ -27,3 +27,5 @@ def handle_ask_question(question: str):
 if __name__ == "__main__":
     print("Starting server in http://127.0.0.1:8000")
     uvicorn.run(app, host="127.0.0.1", port=8000)
+
+# uvicorn backend.FastAPI:app --host 127.0.0.1 --port 8000 --reload --reload-dir backend/RAG/GitSense_Knowledge_Database
